@@ -4,9 +4,6 @@
     </head>
     <body>
         <p>Login</p>
-        <% if (messages.error) { %>
-            <%= messages.error %>
-        <% } %>
         <form action="/login" method="POST">
             <input type="text" placeholder="name" id="name" name="name" required>
             <input type="password" placeholder="password" name="password" id="password" required>

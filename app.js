@@ -1,93 +1,111 @@
 let usePort = 3000;
-let users = [{id: "1", name: "swp", password: "$2b$10$A1f83ckkwZQPWoKepJUCa.zK40zo5gRP8ndGxLJJ/p56SZR132mH2"}];
 
 // --
+
 if(process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 
-let methodOverride = require('method-override');
-let flash = require('express-flash');
 let session = require('express-session');
-let passport = require('passport');
-let initializePassport = require('./passport-config.js');
+let db = require('./database.js');
 let bcrypt = require('bcrypt');
 let express = require('express');
 
 let app = new express();
-initializePassport(passport,
-    name => users.find(user => user.name === name),
-    id => users.find(user => user.id === id)
-);
 
 app.set('view-engine', 'ejs');
-app.use(express.urlencoded({extended: false}));
-app.use(flash());
+app.use(express.static('views'));
+app.use(express.urlencoded({extended: true}));
 app.use(session({
     secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false
+    resave: true,
+    saveUninitialized: true
 }));
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(methodOverride('_method'));
 
-app.get('/', checkAuthenticated, (req, res) => {
-    res.render('index.ejs', {name: req.user.name});
+// home 
+app.get('/', (req, res) => {
+    /*if(!req.session.loggedin) {
+        res.redirect('/login');
+        return;
+    }*/
+
+    res.render('index.ejs', {name: req.session.username});
+    console.log(req.session);
 })
 
-app.get('/login', checkNotAuthenticated, (req, res) => {
+// login
+app.get('/login', (req, res) => {
+    if(req.session.loggedin) {
+        res.redirect('/');
+        return;
+    }
+
     res.render('login.ejs');
 })
 
-app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true
-}))
+app.post('/login', (request, response) => {
+    let uname = request.body.name;
+    let pword = request.body.password;
+    
+    if(uname == "" || pword == "") {
+        response.redirect('/login');
+        return;
+    }
 
-app.get('/register', checkNotAuthenticated, (req, res) => {
+    db.query(`SELECT * FROM users WHERE name = '${uname}'`, async (err, res, fields) => {
+        if(err) throw err;
+
+        if(res.length <= 0) {
+            response.redirect('/login');
+            return;
+        }
+
+        for(let i = 0; i < res.length; i++) {
+            if(res[i].name == uname && await bcrypt.compare(pword, res[i].pass)) {
+                request.session.loggedin = true;
+                request.session.username = res[i].name;
+                response.redirect('/');
+            } else {
+                console.log("incorrect");
+            }
+        }
+    });
+
+});
+
+// register
+app.get('/register', (req, res) => {
+    if(req.session.loggedin) {
+        res.redirect('/');
+        return;
+    }
+
     res.render('register.ejs')
 })
 
-app.post('/register', checkNotAuthenticated, async (req, res) => {
+app.post('/register', async (request, response) => {
     try {
-        let hashedPword = await bcrypt.hash(req.body.password, 10);
-        users.push({
-            id: Date.now().toString(),
-            name: req.body.name,
-            password: hashedPword
-        })
-        res.redirect('/login');
-    } catch {
-        res.redirect('/register');
+        console.log("a");
+        let hashedPword = await bcrypt.hash(request.body.password, 10);
+        console.log("b");
+        db.query(`INSERT INTO users (name, pass) VALUES ('${request.body.name}', '${hashedPword}')`, (err, res, fields) => {
+            if(err) console.log(err);
+            response.redirect('/login');
+            return;
+        });
+    } catch (e) {
+        response.redirect('/register');
     }
-    console.log(users);
 })
 
-app.delete('/logout', checkAuthenticated, (req, res) => {
-    req.logOut((err) => {
-        if (err) {
-            return next(err);
-        }
-        res.redirect('/login');
-    });
-})
-
-function checkAuthenticated(req, res, next) {
-    if(req.isAuthenticated()) {
-        return next();
+// Logout
+app.get('/logout', (req, res) => {
+    if(req.session.loggedin) {
+        req.session.destroy();
     }
-
     res.redirect('/login');
-}
+})
 
-function checkNotAuthenticated(req, res, next) {
-    if(req.isAuthenticated()) {
-        return res.redirect('/');
-    }
-    next();
-}
 
 app.listen(usePort, (err) => {
     console.log(err ? err : `Listening on port ${usePort}`);
