@@ -32,9 +32,10 @@ app.get('/', (req, res) => {
     res.render('index.ejs', {name: req.session.username});
 })
 
-app.get('/getAssignments', (request, response) => {
-    db.query(`SELECT * FROM assignments WHERE userID = '${request.session.userID}'`, (err, res, fields) => {
-        response.send(res);
+app.get('/getAssignments', (req, res) => {
+    let userID = req.session.userID;
+    db.query(`SELECT * FROM assignments WHERE userID = ?`, userID, (queryErr, queryRes, queryField) => {
+        res.send(res);
     })
 })
 
@@ -48,36 +49,50 @@ app.get('/login', (req, res) => {
     res.render('login.ejs');
 })
 
-app.post('/login', (request, response) => {
-    let uname = request.body.name;
-    let pword = request.body.password;
+app.post('/login', (req, res) => {
+    let uname = req.body.name;
+    let pword = req.body.password;
+    let regUname = "^(?=[a-zA-Z0-9._]{8,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
+    let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$";
     
-    if(uname == "" || pword == "") {
-        response.redirect('/login');
+    if(!uname.match(regUname)) {
+        console.log("uname doesnt match requirements");
+        res.send("Invalid username entered");
+        return;
+    }
+    
+    if(!pword.match(regPword)) {
+        console.log("pword doesnt match requirements");
+        res.send("Invalid password entered");
         return;
     }
 
-    db.query(`SELECT * FROM users WHERE name = '${uname}'`, async (err, res, fields) => {
-        if(err) throw err;
-
-        if(res.length <= 0) {
-            response.redirect('/login');
+    db.query("SELECT * FROM users WHERE name = ?", uname, async(queryErr, queryRes, queryFields) => {
+        if(queryErr) {
+            console.log(queryErr);
+            res.send(queryErr);
             return;
         }
-        
-        for(let i = 0; i < res.length; i++) {
-            if(res[i].name == uname && await bcrypt.compare(pword, res[i].pass)) {
-                request.session.loggedin = true;
-                request.session.username = res[i].name;
-                request.session.userID = res[i].id;
+
+        if(queryRes.length <= 0) {
+            res.redirect('/login');
+            return;
+        }
+
+        for(let i = 0; i < queryRes.length; i++) {
+            if(queryRes[i].name == uname && await bcrypt.compare(pword, queryRes[i].pass)) {
+                req.session.loggedin = true;
+                req.session.username = queryRes[i].name;
+                req.session.userID = queryRes[i].id;
                 
-                response.redirect('/');
+                res.redirect('/');
             } else {
-                console.log("incorrect");
+                console.log("Incorrect Password");
+                res.send("Incorrect password entered");
+                return;
             }
         }
-    });
-
+    })
 });
 
 // register
@@ -90,18 +105,51 @@ app.get('/register', (req, res) => {
     res.render('register.ejs')
 })
 
-app.post('/register', async (request, response) => {
+app.post('/register', async (req, res) => {
     try {
-        console.log("a");
-        let hashedPword = await bcrypt.hash(request.body.password, 10);
-        console.log("b");
-        db.query(`INSERT INTO users (name, pass) VALUES ('${request.body.name}', '${hashedPword}')`, (err, res, fields) => {
-            if(err) console.log(err);
-            response.redirect('/login');
+        let uname = req.body.name;
+        let pword = req.body.password;
+        let regUname = "^(?=[a-zA-Z0-9._]{8,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
+        let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$";
+
+        if(!uname.match(regUname)) {
+            console.log("uname doesnt match");
+            res.send("Username doesn't meet requirements");
             return;
-        });
+        }
+        
+        if(!pword.match(regPword)) {
+            console.log("pword doesnt match");
+            res.send("Password doesn't meet requirements");
+            return;
+        }
+        
+        db.query("SELECT * FROM users WHERE name = ?", uname, async (queryErr, queryRes, queryField) => {
+            if(queryErr) {
+                console.log(queryErr);
+                res.send(queryErr);
+                return;
+            }
+            if(queryRes.length > 0) {
+                console.log("User already exists!");
+                res.send("User already exists");
+                return;
+            }
+            
+            let hashedPword = await bcrypt.hash(pword, 10);
+            db.query("INSERT INTO users (name, pass) VALUES (?, ?)", [uname, hashedPword], (queryErr, queryRes, queryField) => {
+                if(queryErr) {
+                    console.log(queryErr);
+                    res.send(queryErr);
+                    return;
+                }
+
+                res.redirect('/login');
+                return;
+            })
+        })
     } catch (e) {
-        response.redirect('/register');
+        res.redirect('/register');
     }
 })
 
