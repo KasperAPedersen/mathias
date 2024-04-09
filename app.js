@@ -136,17 +136,20 @@ app.post('/login', (req, res) => {
     let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{5,}$";
     
     if(!uname.match(regUname)) {
+        console.log("uanme invalid");
         res.redirect('/login');
         return;
     }
     
     if(!pword.match(regPword)) {
+        console.log("pword invalid");
         res.redirect('/login');
         return;
     }
 
     db.query("SELECT * FROM users WHERE name = ?", uname, async(queryErr, queryRes, queryFields) => {
         if(queryErr) {
+            console.log(queryErr);
             res.redirect('/login');
             return;
         }
@@ -191,17 +194,20 @@ app.post('/register', async (req, res) => {
         let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{5,}$";
 
         if(!uname.match(regUname)) {
+            console.log("username invalid");
             res.redirect('/register');
             return;
         }
         
         if(!pword.match(regPword)) {
+            console.log("password invalid");
             res.redirect('/register');
             return;
         }
         
         db.query("SELECT * FROM users WHERE name = ?", uname, async (queryErr, queryRes, queryField) => {
             if(queryErr) {
+                console.log(queryErr);
                 res.redirect('/register');
                 return;
             }
@@ -223,6 +229,7 @@ app.post('/register', async (req, res) => {
             })
         })
     } catch (e) {
+        console.log(e);
         res.redirect('/register');
     }
 })
