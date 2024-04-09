@@ -24,10 +24,10 @@ app.use(session({
 
 // home 
 app.get('/', (req, res) => {
-    if(!req.session.loggedin) {
+    /*if(!req.session.loggedin) {
         res.redirect('/login');
         return;
-    }
+    }*/
 
     res.render('index.ejs', {name: req.session.username});
 })
@@ -35,8 +35,27 @@ app.get('/', (req, res) => {
 app.get('/getAssignments', (req, res) => {
     let userID = req.session.userID;
     db.query(`SELECT * FROM assignments WHERE userID = ?`, userID, (queryErr, queryRes, queryField) => {
-        res.send(res);
+        res.send(queryRes);
     })
+})
+
+app.get('/finishedAssignment/:id', (req, res) => {
+    let assignmentID = req.params.id;
+    //console.log("Setting assignment " + assignmentID + " to finished");
+    console.log(assignmentID);
+    if(isNaN(assignmentID)) {
+        console.log("Assignment id is not a number");
+        res.redirect('/');
+        return;
+    }
+
+    db.query("UPDATE assignments SET status = 1 WHERE id = ?", assignmentID, (queryErr, queryRes, queryField) => {
+        if(queryErr) console.log(queryErr);
+
+        console.log(queryRes);
+    })
+    res.send();
+
 })
 
 // login
