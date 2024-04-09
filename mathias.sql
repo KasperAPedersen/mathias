@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 09, 2024 at 06:46 PM
+-- Generation Time: Apr 09, 2024 at 10:30 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -34,16 +34,6 @@ CREATE TABLE `assignments` (
   `content` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `assignments`
---
-
-INSERT INTO `assignments` (`id`, `userID`, `status`, `content`) VALUES
-(1, 6, 1, 'Test assignment 1'),
-(2, 6, 1, 'Test assignment 2'),
-(3, 1, 0, 'esfjsn\r\n'),
-(4, 2, 0, 'dsrgvsrv');
-
 -- --------------------------------------------------------
 
 --
@@ -59,13 +49,6 @@ CREATE TABLE `users` (
   `pass` varchar(255) NOT NULL,
   `admin` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`id`, `picture`, `first`, `last`, `name`, `pass`, `admin`) VALUES
-(24, 'https://www.w3schools.com/w3css/img_avatar2.png', 'Peter', 'Hansen', 'admin', '$2b$10$9rAlWh6ekPpi.za5.ns8Z.Mrnk4lxQFZTn.wh8rFWz0loCOJDiURW', 1);
 
 --
 -- Indexes for dumped tables
@@ -91,13 +74,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `assignments`
 --
 ALTER TABLE `assignments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
