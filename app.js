@@ -7,9 +7,11 @@ if(process.env.NODE_ENV !== 'production') {
 }
 
 let session = require('express-session');
+let flash = require('express-flash');
 let db = require('./database.js');
 let bcrypt = require('bcrypt');
 let express = require('express');
+
 
 let app = new express();
 
@@ -19,8 +21,10 @@ app.use(express.urlencoded({extended: true}));
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: true,
-    saveUninitialized: true
+    saveUninitialized: true,
 }));
+app.use(flash());
+
 
 // Admin
 app.get('/admin', (req, res) => {
@@ -86,6 +90,7 @@ app.get('/deleteUser/:id', (req, res) => {
 // home 
 app.get('/', (req, res) => {
     if(!req.session.loggedin) {
+        console.log(1);
         res.redirect('/login');
         return;
     }
@@ -136,26 +141,27 @@ app.post('/login', (req, res) => {
     let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{5,}$";
     
     if(!uname.match(regUname)) {
-        console.log("uanme invalid");
-        res.redirect('/login');
+        req.flash("info", "Invalid username");
+        res.render('login.ejs');
         return;
     }
     
     if(!pword.match(regPword)) {
-        console.log("pword invalid");
-        res.redirect('/login');
+        req.flash("info", "Invalid password");
+        res.render('login.ejs');
         return;
     }
 
     db.query("SELECT * FROM users WHERE name = ?", uname, async(queryErr, queryRes, queryFields) => {
         if(queryErr) {
-            console.log(queryErr);
-            res.redirect('/login');
+            req.flash("info", queryErr);
+            res.render('login.ejs');
             return;
         }
 
         if(queryRes.length <= 0) {
-            res.redirect('/login');
+            req.flash("info", "User doesn't exist");
+            res.render('login.ejs');
             return;
         }
 
@@ -169,7 +175,8 @@ app.post('/login', (req, res) => {
                 
                 res.redirect('/');
             } else {
-                res.redirect('/login');
+                req.flash("info", "Incorrect password");
+                res.render('login.ejs');
                 return;
             }
         }
@@ -183,7 +190,7 @@ app.get('/register', (req, res) => {
         return;
     }
 
-    res.render('register.ejs')
+    res.render('register.ejs');
 })
 
 app.post('/register', async (req, res) => {
@@ -194,33 +201,34 @@ app.post('/register', async (req, res) => {
         let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{5,}$";
 
         if(!uname.match(regUname)) {
-            console.log("username invalid");
-            res.redirect('/register');
+            req.flash("info", "Invalid username");
+            res.render('register.ejs');
             return;
         }
         
         if(!pword.match(regPword)) {
-            console.log("password invalid");
-            res.redirect('/register');
+            req.flash("info", "Invalid password");
+            res.render('register.ejs');
             return;
         }
         
         db.query("SELECT * FROM users WHERE name = ?", uname, async (queryErr, queryRes, queryField) => {
             if(queryErr) {
-                console.log(queryErr);
-                res.redirect('/register');
+                req.flash("info", queryErr);
+                res.render('register.ejs');
                 return;
             }
             if(queryRes.length > 0) {
-                res.redirect('/register');
+                req.flash("info", "User already exists");
+                res.render('register.ejs');
                 return;
             }
             
             let hashedPword = await bcrypt.hash(pword, 10);
             db.query("INSERT INTO users (name, pass) VALUES (?, ?)", [uname, hashedPword], (queryErr, queryRes, queryField) => {
                 if(queryErr) {
-                    console.log(queryErr);
-                    res.send(queryErr);
+                    req.flash("info", queryErr);
+                    res.render('register.ejs');
                     return;
                 }
 
@@ -229,7 +237,8 @@ app.post('/register', async (req, res) => {
             })
         })
     } catch (e) {
-        console.log(e);
+        req.flash("info", e);
+        res.render('register.ejs');
         res.redirect('/register');
     }
 })

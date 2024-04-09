@@ -8,6 +8,11 @@
     </head>
     <body>
         <div id="swp">
+            <% if (locals.messages != null) { %>
+                <% let messages = Array(locals.messages); messages.forEach((m) => { %>
+                    <div class="w3-panel w3-red" id="alert"><p><%= m.info %></p></div>
+            <% })} %>
+
             <form action="/register" class="w3-container w3-card-4 w3-light-grey w3-text-blue w3-margin" method="POST">
                 <h2 class="w3-center">Register</h2>
                  
@@ -29,5 +34,6 @@
                 
             </form>
         </div>
+        <script src="inc/styling/js/register.js"></script>
     </body>
 </html>

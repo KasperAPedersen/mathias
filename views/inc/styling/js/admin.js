@@ -1,6 +1,7 @@
 window.onload = () => {
     let displayTab = document.getElementById("displayTab");
     displayTab.style.width = displayTab.clientWidth - 16 + "px";
+
 }
 
 function changeTab(tab) {
