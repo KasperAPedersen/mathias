@@ -10,8 +10,9 @@
         <div id="swp">
             <!-- Nav -->
             <div class="w3-display-container w3-bar w3-dark-grey">
-                <a href="#" class="w3-bar-item w3-button w3-mobile w3-green" style="width:33%">Home <i class="fa-solid fa-home"></i></a>
-                <a href="/logout" class="w3-bar-item w3-button w3-mobile w3-display-right" style="width:33%">Log out <i class="fa-solid fa-sign-out"></i></a>
+                <a href="#" class="w3-bar-item w3-button w3-mobile w3-blue w3-hover-blue" style="width:33%">Home <i class="fa-solid fa-home"></i></a>
+                <% if(admin == 1) { %><a href="/admin" class="w3-bar-item w3-button w3-mobile w3-hover-blue" style="width:33%">Admin <i class="fa-solid fa-home"></i></a><% } %>
+                <a href="/logout" class="w3-bar-item w3-button w3-mobile w3-display-right w3-hover-blue" style="width:33%">Log out <i class="fa-solid fa-sign-out"></i></a>
             </div>
 
             <div class="w3-row w3-margin-top">
@@ -20,7 +21,7 @@
                     <div class="w3-card-4 w3-dark-grey">
 
                         <div class="w3-container w3-center">
-                            <img src="https://www.w3schools.com/w3css/img_avatar3.png" alt="Avatar" style="width:80%">
+                            <img src="<%= picture %>" alt="Avatar" style="width:80%">
                             <h5>Hi <%= name %> <i class="fa     fa-smile-o"></i></h5>
                         </div>
                     </div>

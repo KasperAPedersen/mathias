@@ -22,6 +22,69 @@ app.use(session({
     saveUninitialized: true
 }));
 
+// Admin
+app.get('/admin', (req, res) => {
+    if(!req.session.loggedin) {
+        res.redirect('/login');
+        return;
+    }
+
+    if(!req.session.isAdmin) {
+        res.redirect('/');
+        return;
+    }
+
+    res.render('admin.ejs');
+})
+
+app.get('/getAllUsers', (req, res) => {
+    if(!req.session.loggedin) {
+        res.redirect('/login');
+        return;
+    }
+
+    if(!req.session.isAdmin) {
+        res.redirect('/');
+        return;
+    }
+
+    db.query(`SELECT * FROM users`, (queryErr, queryRes, queryField) => {
+        res.send(queryRes);
+    })
+})
+
+app.get('/deleteUser/:id', (req, res) => {
+    if(!req.session.loggedin) {
+        res.redirect('/login');
+        return;
+    }
+
+    if(!req.session.isAdmin) {
+        res.redirect('/');
+        return;
+    }
+
+    let userID = req.params.id;
+    
+    if(isNaN(userID)) {
+        console.log("ID is not a number");
+        res.send("Invalid ID entered");
+        return;
+    }
+
+    db.query("DELETE FROM users WHERE id = ?", userID, (queryErr, queryRes, queryField) => {
+        if(queryErr) {
+            console.log(queryErr);
+            res.redirect('/');
+            return;
+        }
+
+        console.log(queryRes);
+    })
+
+    console.log("done");
+})
+
 // home 
 app.get('/', (req, res) => {
     /*if(!req.session.loggedin) {
@@ -29,7 +92,7 @@ app.get('/', (req, res) => {
         return;
     }*/
 
-    res.render('index.ejs', {name: req.session.username});
+    res.render('index.ejs', {name: req.session.username, admin: req.session.isAdmin, picture: req.session.picture});
 })
 
 app.get('/getAssignments', (req, res) => {
@@ -71,8 +134,8 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
     let uname = req.body.name;
     let pword = req.body.password;
-    let regUname = "^(?=[a-zA-Z0-9._]{8,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
-    let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$";
+    let regUname = "^(?=[a-zA-Z0-9._]{5,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
+    let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{5,}$";
     
     if(!uname.match(regUname)) {
         console.log("uname doesnt match requirements");
@@ -103,6 +166,8 @@ app.post('/login', (req, res) => {
                 req.session.loggedin = true;
                 req.session.username = queryRes[i].name;
                 req.session.userID = queryRes[i].id;
+                req.session.isAdmin = queryRes[i].admin;
+                req.session.picture = queryRes[i].picture;
                 
                 res.redirect('/');
             } else {
@@ -128,8 +193,8 @@ app.post('/register', async (req, res) => {
     try {
         let uname = req.body.name;
         let pword = req.body.password;
-        let regUname = "^(?=[a-zA-Z0-9._]{8,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
-        let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$";
+        let regUname = "^(?=[a-zA-Z0-9._]{5,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
+        let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{5,}$";
 
         if(!uname.match(regUname)) {
             console.log("uname doesnt match");
