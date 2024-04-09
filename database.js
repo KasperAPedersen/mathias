@@ -1,7 +1,3 @@
-if(process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
-
 let mysql = require('mysql2');
 
 let mySqlPool = mysql.createPool({
