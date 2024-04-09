@@ -1,14 +1,33 @@
 <html>
     <head>
-
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Mathias | Register</title>
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        <script src="https://kit.fontawesome.com/d7cb81324e.js" crossorigin="anonymous"></script>
+        <link rel="stylesheet" type="text/css" href="inc/styling/css/register.css" />
     </head>
     <body>
-        <p>Register</p>
-        <form action="/register" method="POST">
-            <input type="text" placeholder="name" id="name" name="name" required>
-            <input type="password" placeholder="password" name="password" id="password" required>
-            <button type="submit">Register</button>
-        </form>
-        <a href="/login">Login</a>
+        <div id="swp">
+            <form action="/register" class="w3-container w3-card-4 w3-light-grey w3-text-blue w3-margin" method="POST">
+                <h2 class="w3-center">Register</h2>
+                 
+                <div class="w3-row w3-section">
+                  <div class="w3-col" style="width:50px"><i class="w3-xxlarge fa fa-user"></i></div>
+                    <div class="w3-rest">
+                      <input class="w3-input w3-border" name="name" type="text" placeholder="Username">
+                    </div>
+                </div>
+                
+                <div class="w3-row w3-section">
+                  <div class="w3-col" style="width:50px"><i class="w3-xxlarge fa fa-key"></i></div>
+                    <div class="w3-rest">
+                      <input class="w3-input w3-border" name="password" type="password" placeholder="Password">
+                    </div>
+                </div>
+                
+                <button class="w3-button w3-block w3-section w3-blue w3-ripple w3-padding" type="submit">Register</button>
+                
+            </form>
+        </div>
     </body>
 </html>

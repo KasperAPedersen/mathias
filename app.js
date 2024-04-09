@@ -24,13 +24,18 @@ app.use(session({
 
 // home 
 app.get('/', (req, res) => {
-    /*if(!req.session.loggedin) {
+    if(!req.session.loggedin) {
         res.redirect('/login');
         return;
-    }*/
+    }
 
     res.render('index.ejs', {name: req.session.username});
-    console.log(req.session);
+})
+
+app.get('/getAssignments', (request, response) => {
+    db.query(`SELECT * FROM assignments WHERE userID = '${request.session.userID}'`, (err, res, fields) => {
+        response.send(res);
+    })
 })
 
 // login
@@ -59,11 +64,13 @@ app.post('/login', (request, response) => {
             response.redirect('/login');
             return;
         }
-
+        
         for(let i = 0; i < res.length; i++) {
             if(res[i].name == uname && await bcrypt.compare(pword, res[i].pass)) {
                 request.session.loggedin = true;
                 request.session.username = res[i].name;
+                request.session.userID = res[i].id;
+                
                 response.redirect('/');
             } else {
                 console.log("incorrect");

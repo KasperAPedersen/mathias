@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Vært: 127.0.0.1
--- Genereringstid: 07. 04 2024 kl. 15:29:53
+-- Genereringstid: 09. 04 2024 kl. 09:49:31
 -- Serverversion: 10.4.28-MariaDB
 -- PHP-version: 8.2.4
 
@@ -20,6 +20,29 @@ SET time_zone = "+00:00";
 --
 -- Database: `mathias`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Struktur-dump for tabellen `assignments`
+--
+
+CREATE TABLE `assignments` (
+  `id` int(11) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `status` int(11) NOT NULL,
+  `content` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Data dump for tabellen `assignments`
+--
+
+INSERT INTO `assignments` (`id`, `userID`, `status`, `content`) VALUES
+(1, 6, 1, 'Test assignment 1'),
+(2, 6, 1, 'Test assignment 2'),
+(3, 1, 0, 'esfjsn\r\n'),
+(4, 2, 0, 'dsrgvsrv');
 
 -- --------------------------------------------------------
 
@@ -54,6 +77,12 @@ INSERT INTO `users` (`id`, `name`, `pass`) VALUES
 --
 
 --
+-- Indeks for tabel `assignments`
+--
+ALTER TABLE `assignments`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indeks for tabel `users`
 --
 ALTER TABLE `users`
@@ -62,6 +91,12 @@ ALTER TABLE `users`
 --
 -- Brug ikke AUTO_INCREMENT for slettede tabeller
 --
+
+--
+-- Tilføj AUTO_INCREMENT i tabel `assignments`
+--
+ALTER TABLE `assignments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Tilføj AUTO_INCREMENT i tabel `users`
