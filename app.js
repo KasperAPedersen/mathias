@@ -78,19 +78,17 @@ app.get('/deleteUser/:id', (req, res) => {
             res.redirect('/');
             return;
         }
-
-        console.log(queryRes);
     })
 
-    console.log("done");
+    res.redirect('/admin');
 })
 
 // home 
 app.get('/', (req, res) => {
-    /*if(!req.session.loggedin) {
+    if(!req.session.loggedin) {
         res.redirect('/login');
         return;
-    }*/
+    }
 
     res.render('index.ejs', {name: req.session.username, admin: req.session.isAdmin, picture: req.session.picture});
 })
@@ -115,7 +113,7 @@ app.get('/finishedAssignment/:id', (req, res) => {
     db.query("UPDATE assignments SET status = 1 WHERE id = ?", assignmentID, (queryErr, queryRes, queryField) => {
         if(queryErr) console.log(queryErr);
 
-        console.log(queryRes);
+        res.redirect('/');
     })
     res.send();
 
@@ -138,21 +136,18 @@ app.post('/login', (req, res) => {
     let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{5,}$";
     
     if(!uname.match(regUname)) {
-        console.log("uname doesnt match requirements");
-        res.send("Invalid username entered");
+        res.redirect('/login');
         return;
     }
     
     if(!pword.match(regPword)) {
-        console.log("pword doesnt match requirements");
-        res.send("Invalid password entered");
+        res.redirect('/login');
         return;
     }
 
     db.query("SELECT * FROM users WHERE name = ?", uname, async(queryErr, queryRes, queryFields) => {
         if(queryErr) {
-            console.log(queryErr);
-            res.send(queryErr);
+            res.redirect('/login');
             return;
         }
 
@@ -171,8 +166,7 @@ app.post('/login', (req, res) => {
                 
                 res.redirect('/');
             } else {
-                console.log("Incorrect Password");
-                res.send("Incorrect password entered");
+                res.redirect('/login');
                 return;
             }
         }
@@ -197,26 +191,22 @@ app.post('/register', async (req, res) => {
         let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{5,}$";
 
         if(!uname.match(regUname)) {
-            console.log("uname doesnt match");
-            res.send("Username doesn't meet requirements");
+            res.redirect('/register');
             return;
         }
         
         if(!pword.match(regPword)) {
-            console.log("pword doesnt match");
-            res.send("Password doesn't meet requirements");
+            res.redirect('/register');
             return;
         }
         
         db.query("SELECT * FROM users WHERE name = ?", uname, async (queryErr, queryRes, queryField) => {
             if(queryErr) {
-                console.log(queryErr);
-                res.send(queryErr);
+                res.redirect('/register');
                 return;
             }
             if(queryRes.length > 0) {
-                console.log("User already exists!");
-                res.send("User already exists");
+                res.redirect('/register');
                 return;
             }
             
