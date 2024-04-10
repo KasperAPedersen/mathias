@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 09, 2024 at 10:30 PM
+-- Generation Time: Apr 09, 2024 at 10:38 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,8 +43,8 @@ CREATE TABLE `assignments` (
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `picture` varchar(255) NOT NULL DEFAULT 'https://www.w3schools.com/w3css/img_avatar2.png',
-  `first` varchar(255) NOT NULL,
-  `last` varchar(255) NOT NULL,
+  `first` varchar(255) NOT NULL DEFAULT 'John',
+  `last` varchar(255) NOT NULL DEFAULT 'Doe',
   `name` varchar(255) NOT NULL,
   `pass` varchar(255) NOT NULL,
   `admin` int(11) NOT NULL DEFAULT 0

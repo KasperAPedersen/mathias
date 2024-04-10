@@ -6,3 +6,12 @@ body {
     max-width: 1080px;
     margin: 0 auto;
 }
+
+#fname {
+    width: calc(50% - 50px);
+}
+
+#lname {
+    margin-left: 15px;
+    width: calc(50% - 15px);
+}
