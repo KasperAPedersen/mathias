@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js -e html,css,js,ejs"
@@ -19,7 +20,9 @@
     "method-override": "^3.0.0",
     "mysql2": "^3.9.3",
     "passport": "^0.7.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "path": "^0.12.7",
+    "url": "^0.11.3"
   },
   "devDependencies": {
     "dotenv": "^16.4.5",

@@ -1,15 +1,18 @@
-if(process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
+import 'dotenv/config.js'
+import mysql from 'mysql2';
+let db = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    multipleStatements: false
+}).promise();
+
+export function get(_sql, _values) {
+    return db.query(_sql, _values);
 }
 
-let mysql = require('mysql2');
-
-let mySqlPool = mysql.createPool({
-    host: '127.0.0.1',
-    user: 'root',
-    password: '',
-    database: 'mathias',
-    multipleStatements: false
-});
-
-module.exports = mySqlPool;
+export async function set(_sql, _values) {
+    let res = db.query(_sql, _values);
+    return res;
+}

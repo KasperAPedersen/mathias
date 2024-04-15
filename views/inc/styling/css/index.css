@@ -11,10 +11,110 @@ body {
 
 .assignmentCard {
     margin-top: 15px;
-    padding-top: 30px;
-    padding-bottom: 30px;
-    padding-left: 30px;
-    padding-right: 30px;
     background-color: grey;
     width: 100%;
+    padding-bottom: 30px;
 }
+
+.assignmentCard>img {
+    width: 100%;
+}
+
+
+
+/*Analog Clock Style */
+.container {
+    position: relative;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  
+  .clock {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .clock::before {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    z-index: 100000;
+  }
+  
+  .clock span {
+    position: absolute;
+    inset: 20px;
+    color: #fff;
+    text-align: center;
+    transform: rotate(calc(30deg * var(--i)));
+    /*360 / 12 = 30deg */
+  }
+  
+  .clock span b {
+    font-size: 1em;
+    opacity: 0.75;
+    font-weight: 600;
+    color: #000;
+    display: inline-block;
+    transform: rotate(calc(-30deg * var(--i)));
+  }
+  
+
+  .circle {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 10;
+  }
+  
+  .circle i {
+    position: absolute;
+    width: 3px;
+    height: 100%;
+    background: var(--clr);
+    opacity: 0.75;
+    transform-origin: bottom;
+    transform: scaleY(0.5);
+  }
+  
+  .circle:nth-child(1) i {
+    width: 3px;
+    height: 100%;
+  }
+  
+  .circle:nth-child(2) i {
+    width: 3px;
+    height: 100%;
+  }
+  
+  .circle2 {
+    width: 110px;
+    height: 110px;
+    z-index: 9;
+  }
+  
+  .circle3 {
+    width: 85px;
+    height: 85px;
+    z-index: 8;
+  }
+  
+  

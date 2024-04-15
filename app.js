@@ -2,16 +2,25 @@ let usePort = 3000;
 
 // --
 
-if(process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+import 'dotenv/config.js';
 
-let session = require('express-session');
-let flash = require('express-flash');
-let db = require('./database.js');
-let bcrypt = require('bcrypt');
-let express = require('express');
-const fileUpload = require('express-fileupload');
+import session from 'express-session';
+
+import flash from 'express-flash';
+
+import * as db from './database.js';
+
+import * as bcrypt from 'bcrypt';
+
+import express from 'express';
+
+import fileUpload from 'express-fileupload';
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+let __filename = fileURLToPath(import.meta.url);
+let __dirname = path.dirname(__filename);
 
 
 let app = new express();
@@ -31,7 +40,7 @@ app.use(fileUpload());
 
 // Admin
 app.get('/admin', (req, res) => {
-    if(!req.session.loggedin) {
+    /*if(!req.session.loggedin) {
         res.redirect('/login');
         return;
     }
@@ -39,12 +48,73 @@ app.get('/admin', (req, res) => {
     if(!req.session.isAdmin) {
         res.redirect('/');
         return;
-    }
+    }*/
 
     res.render('admin.ejs');
 })
 
-app.post('/addAssignment/:id', (req, res) => {
+app.get('/getAllAssignments', async (req, res) => {
+    let queryRes = await db.get("SELECT * FROM assignments");
+    res.send(queryRes[0]);
+    return;
+})
+
+app.post('/addAssignmentToUser/:id', async (req, res) => {
+    let id = req.params.id;
+    let assignment = req.body.assignment;
+
+    let addAssignmentQuery = await db.set("INSERT INTO tasks (userID, taskID, status) VALUES (?, ?, ?)", [id, assignment, 0]);
+    console.log(addAssignmentQuery);
+    res.redirect('/admin');
+    return;
+})
+
+app.post('/addAssignment', async (req, res) => {
+    /*if(!req.session.loggedin) {
+        res.redirect('/login');
+        return;
+    }
+
+    if(!req.session.isAdmin) {
+        res.redirect('/');
+        return;
+    }*/
+
+    try {
+        let chosePicture = false;
+        let picture = "";
+        if(req.files != null) {
+            let {image} = req.files;
+            
+            if (image) {
+                picture = image.name;
+                image.mv(__dirname + '/upload/' + image.name);
+                chosePicture = true;
+            }
+        }
+        
+        let title = req.body.title;
+        let content = req.body.assignment;
+        let pic = chosePicture ? picture : "tmp.png";
+
+        let addAssignmentQuery = await db.set("INSERT INTO assignments (title, picture, content) VALUES (?, ?, ?)", [title, pic, content]);
+        if(addAssignmentQuery[0].affectedRows <= 0 ){
+            req.flash("info", "Something went wrong");
+            res.render('admin.ejs');
+            return;
+        }
+
+        res.redirect('/admin');
+        return;
+    } catch (e) {
+        req.flash("info", "Something went wrong");
+        res.render('admin.ejs');
+        return;
+    }
+    
+})
+
+/*app.post('/addAssignment/:id', async (req, res) => {
     let id = req.params.id;
     let content = req.body.assignment;
     if(!req.session.loggedin) {
@@ -57,18 +127,17 @@ app.post('/addAssignment/:id', (req, res) => {
         return;
     }
 
-    db.query(`INSERT INTO assignments (userID, content) VALUES (?, ?)`, [id, content], (queryErr, queryRes, queryField) => {
-        if(queryErr) {
-            req.flash("info", queryErr);
-            res.render('admin.ejs');
-            return;
-        }
-        res.redirect('/admin');
-    });
-})
+    let addAssignmentQuery = await db.set("INSERT INTO assignments (userID, content) VALUES (?, ?)", [id, content]);
+    if(addAssignmentQuery[0].affectedRows <= 0) {
+        req.flash("info", "Something went wrong");
+        res.render('admin.ejs');
+        return;
+    }
+    res.redirect('/admin');
+})*/
 
-app.get('/getAllUsers', (req, res) => {
-    if(!req.session.loggedin) {
+app.get('/getAllUsers', async (req, res) => {
+    /*if(!req.session.loggedin) {
         res.redirect('/login');
         return;
     }
@@ -76,14 +145,14 @@ app.get('/getAllUsers', (req, res) => {
     if(!req.session.isAdmin) {
         res.redirect('/');
         return;
-    }
+    }*/
 
-    db.query(`SELECT * FROM users`, (queryErr, queryRes, queryField) => {
-        res.send(queryRes);
-    })
+    let getAllUsersQuery = await db.get("SELECT * FROM users", []);
+    res.send(getAllUsersQuery[0]);
+    return;
 })
 
-app.post('/updateUser/:id', (req, res) => {
+app.post('/updateUser/:id', async (req, res) => {
     if(!req.session.loggedin) {
         res.redirect('/login');
         return;
@@ -97,14 +166,11 @@ app.post('/updateUser/:id', (req, res) => {
     try {
         let chosePicture = false;
         let picture = "";
-        // Get the file that was set to our field named "image"
         if(req.files != null) {
             let {image} = req.files;
             
-            // If no image submitted, exit
             if (image) {
                 picture = image.name;
-                // Move the uploaded image to our upload folder
                 image.mv(__dirname + '/upload/' + image.name);
                 chosePicture = true;
             }
@@ -118,44 +184,38 @@ app.post('/updateUser/:id', (req, res) => {
         
         let regUname = "^(?=[a-zA-Z0-9._]{5,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
 
-        if(!uname.match(regUname)) {
+        if(!uname.match(regUname) && uname != "") {
             req.flash("info", "Invalid username");
-            res.render('register.ejs');
+            res.render('admin.ejs');
             return;
         }
 
-        db.query("SELECT * FROM users WHERE id = ?", id, async (queryErr, queryRes, queryField) => {
-            if(queryErr) {
-                req.flash("info", queryErr);
-                res.render('admin.ejs');
-                return;
-            }
-            if(queryRes.length < 0) {
-                req.flash("info", "User doesn't exists");
-                res.render('admin.ejs');
-                return;
-            }
-            let pic = chosePicture ? picture : queryRes[0].picture;
-            if(fname == "") fname = queryRes[0].first;
-            if(lname == "") lname = queryRes[0].last;
-            if(uname == "") uname = queryRes[0].name;
+        let getUserQuery = await db.get("SELECT * FROM users WHERE id = ?", [id]);
+        if(getUserQuery[0].length <= 0){
+            req.flash("info", "User doesn't exists");
+            res.render('admin.ejs');
+            return;
+        }
 
-            db.query("UPDATE users SET first = ?, last = ?, name = ?, picture = ? WHERE id = ?", [fname, lname, uname, pic, id], (queryErr, queryRes, queryField) => {
-                if(queryErr) {
-                    req.flash("info", queryErr.message);
-                    res.render("admin.ejs");
-                    return;
-                }
+        let pic = chosePicture ? picture : getUserQuery[0][0].picture;
+        if(fname == "") fname = getUserQuery[0][0].first;
+        if(lname == "") lname = getUserQuery[0][0].last;
+        if(uname == "") uname = getUserQuery[0][0].name;
 
-                res.redirect('/admin');
-            });
-        })
+        let updateUserQuery = await db.set("UPDATE users SET first = ?, last = ?, name = ?, picture = ? WHERE id = ?", [fname, lname, uname, pic, id]);
+        if(updateUserQuery[0].affectedRows <= 0) {
+            req.flash("info", "Something went wrong");
+            res.render("admin.ejs");
+            return;
+        }
+
+        res.redirect('/admin');
     } catch (e) {
         console.log(e);
     }
 });
 
-app.get('/deleteUser/:id', (req, res) => {
+app.get('/deleteUser/:id', async (req, res) => {
     if(!req.session.loggedin) {
         res.redirect('/login');
         return;
@@ -169,18 +229,25 @@ app.get('/deleteUser/:id', (req, res) => {
     let userID = req.params.id;
     
     if(isNaN(userID)) {
-        console.log("ID is not a number");
-        res.send("Invalid ID entered");
+        req.flash("info", "Invalid ID");
+        res.render('/');
         return;
     }
 
-    db.query("DELETE FROM users WHERE id = ?", userID, (queryErr, queryRes, queryField) => {
+    let deleteUserQuery = await db.set("DELETE FROM users WHERE id = ?", [userID]);
+    if(deleteUserQuery[0].affectedRows <= 0) {
+        req.flash("info", "something went wrong");
+        res.render('/');
+        return;
+    }
+
+    /*db.query("DELETE FROM users WHERE id = ?", userID, (queryErr, queryRes, queryField) => {
         if(queryErr) {
             console.log(queryErr);
             res.redirect('/');
             return;
         }
-    })
+    })*/
 
     res.redirect('/admin');
 })
@@ -188,7 +255,6 @@ app.get('/deleteUser/:id', (req, res) => {
 // home 
 app.get('/', (req, res) => {
     if(!req.session.loggedin) {
-        console.log(1);
         res.redirect('/login');
         return;
     }
@@ -196,40 +262,51 @@ app.get('/', (req, res) => {
     res.render('index.ejs', {name: req.session.fname, admin: req.session.isAdmin, picture: req.session.picture});
 })
 
-app.get('/getAssignments', (req, res) => {
+app.get('/getAssignments', async (req, res) => {
     let userID = req.session.userID;
-    db.query(`SELECT * FROM assignments WHERE userID = ?`, userID, (queryErr, queryRes, queryField) => {
-        if(queryErr) {
-            req.flash("info", queryErr);
-            res.render('login.ejs');
-            return;
-        }
-        res.send(queryRes);
-        return;
-    })
+
+    let getAssignmentsQuery = await db.get("SELECT * FROM assignments WHERE userID = ?", [userID]);
+    res.send(getAssignmentsQuery[0]);
+    return;
 })
 
-app.get('/finishedAssignment/:id', (req, res) => {
+app.get('/finishedAssignment/:id', async (req, res) => {
     let assignmentID = req.params.id;
-    //console.log("Setting assignment " + assignmentID + " to finished");
-    console.log(assignmentID);
+
     if(isNaN(assignmentID)) {
         req.flash("info", "id not a number");
         res.render('/');
         return;
     }
 
-    db.query("UPDATE assignments SET status = 1 WHERE id = ?", assignmentID, (queryErr, queryRes, queryField) => {
-        if(queryErr) {
-            req.flash("info", queryErr.message);
-            res.render('/');
-            return;
-        }
-
-        res.redirect('/');
+    let updateAssignmentQuery = await db.set("UPDATE assignments SET status = 1 WHERE id = ?", [assignmentID]);
+    if(updateAssignmentQuery[0].affectedRows <= 0) {
+        req.flash("info", "Something went wrong");
+        res.render('/');
         return;
-    })
+    }
 
+    res.redirect('/');
+    return;
+})
+
+app.get('/undoAssignment/:id', async (req, res) => {
+    let assignmentID = req.params.id;
+
+    if(isNaN(assignmentID)) {
+        req.flash("info", "id not a number");
+        res.render('/');
+        return;
+    }
+
+    let updateAssignmentQuery = await db.set("UPDATE assignments SET status = 0 WHERE id = ?", [assignmentID]);
+    if(updateAssignmentQuery[0].affectedRows <= 0) {
+        req.flash("info", "Something went wrong");
+        res.render('/');
+        return;
+    }
+    res.redirect('/');
+    return;
 })
 
 // login
@@ -240,9 +317,10 @@ app.get('/login', (req, res) => {
     }
 
     res.render('login.ejs');
+    return;
 })
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     let uname = req.body.name;
     let pword = req.body.password;
     let regUname = "^(?=[a-zA-Z0-9._]{5,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
@@ -260,38 +338,28 @@ app.post('/login', (req, res) => {
         return;
     }
 
-    db.query("SELECT * FROM users WHERE name = ?", uname, async(queryErr, queryRes, queryFields) => {
-        if(queryErr) {
-            req.flash("info", queryErr);
-            res.render('login.ejs');
-            return;
-        }
+    let getUserQuery = await db.get("SELECT * FROM users WHERE name = ?", [uname]);
 
-        if(queryRes.length <= 0) {
-            req.flash("info", "User doesn't exist");
-            res.render('login.ejs');
-            return;
-        }
-
-        for(let i = 0; i < queryRes.length; i++) {
-            if(queryRes[i].name == uname && await bcrypt.compare(pword, queryRes[i].pass)) {
-                req.session.loggedin = true;
-                req.session.username = queryRes[i].name;
-                req.session.fname = queryRes[i].first;
-                req.session.lname = queryRes[i].last;
-                req.session.userID = queryRes[i].id;
-                req.session.isAdmin = queryRes[i].admin;
-                req.session.picture = queryRes[i].picture;
-                console.log(queryRes[i].picture);
-                
-                res.redirect('/');
-            } else {
-                req.flash("info", "Incorrect password");
-                res.render('login.ejs');
-                return;
-            }
-        }
-    })
+    if(getUserQuery[0].length <= 0) {
+        req.flash("info", "User doesn't exist");
+        res.render('login.ejs');
+        return;
+    }
+    
+    if(getUserQuery[0][0].name == uname && await bcrypt.compare(pword, getUserQuery[0][0].pass)) {
+        req.session.loggedin = true;
+        req.session.username = getUserQuery[0][0].name;
+        req.session.fname = getUserQuery[0][0].first;
+        req.session.lname = getUserQuery[0][0].last;
+        req.session.userID = getUserQuery[0][0].id;
+        req.session.isAdmin = getUserQuery[0][0].admin;
+        req.session.picture = getUserQuery[0][0].picture;
+        res.redirect('/');
+    } else {
+        req.flash("info", "Incorrect password");
+        res.render('login.ejs');
+        return;
+    }
 });
 
 // register
@@ -308,14 +376,11 @@ app.post('/register', async (req, res) => {
     try {
         let chosePicture = false;
         let picture = "";
-        // Get the file that was set to our field named "image"
         if(req.files != null) {
             let {image} = req.files;
             
-            // If no image submitted, exit
             if (image) {
                 picture = image.name;
-                // Move the uploaded image to our upload folder
                 image.mv(__dirname + '/upload/' + image.name);
                 chosePicture = true;
             }
@@ -327,7 +392,6 @@ app.post('/register', async (req, res) => {
         let lname = req.body.lname;
         let pic = chosePicture ? picture : "tmp.png";
 
-        // From <input> node
         
         let regUname = "^(?=[a-zA-Z0-9._]{5,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
         let regPword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{5,}$";
@@ -343,53 +407,32 @@ app.post('/register', async (req, res) => {
             res.render('register.ejs');
             return;
         }
-        
-        db.query("SELECT * FROM users WHERE name = ?", uname, async (queryErr, queryRes, queryField) => {
-            if(queryErr) {
-                req.flash("info", queryErr);
-                res.render('register.ejs');
-                return;
-            }
-            if(queryRes.length > 0) {
-                req.flash("info", "User already exists");
-                res.render('register.ejs');
-                return;
-            }
-            
-            let hashedPword = await bcrypt.hash(pword, 10);
-            db.query("INSERT INTO users (picture, first, last, name, pass) VALUES (?, ?, ?, ?, ?)", [pic, fname, lname, uname, hashedPword], (queryErr, queryRes, queryField) => {
-                if(queryErr) {
-                    req.flash("info", queryErr);
-                    res.render('register.ejs');
-                    return;
-                }
-
-                db.query("SELECT id FROM users WHERE name = ?", uname, (queryErr, queryRes, queryField) => {
-                    if(queryErr) {
-                        req.flash("info", queryErr);
-                        res.render('register.ejs');
-                        return;
-                    }
-
-                    if(queryRes[0].id == 1) {
-                        db.query("UPDATE users SET admin = 1 WHERE id = 1", (queryErr, queryRes, queryField) => {
-                            if(queryErr) {
-                                req.flash("info", queryErr);
-                                res.render('register.ejs');
-                                return;
-                            }
-                        })
-                    }
-                    res.redirect('/login');
-                })
                 
-                return;
-            })
-        })
+        let userQueryRes = await db.get("SELECT * FROM users WHERE name = ?", [uname]);
+        
+        if(userQueryRes[0].length > 0) {
+            req.flash("info", "User already exists");
+            res.render('register.ejs');
+            return;
+        }
+
+        let hashedPword = await bcrypt.hash(pword, 10);
+        let registerUserQuery = await db.set("INSERT INTO users (picture, first, last, name, pass) VALUES (?, ?, ?, ?, ?)", [pic, fname, lname, uname, hashedPword]);
+        if(registerUserQuery[0].affectedRows <= 0) {
+            req.flash("info", "Something went wrong");
+            res.render('register.ejs');
+            return;
+        }
+
+        let getUserQuery = await db.get("SELECT id FROM users WHERE name = ?", [uname]);
+        if(getUserQuery[0][0].id == 1) {
+            await db.set("UPDATE users SET admin = 1 WHERE id = 1");
+        }
+
+        res.redirect('/login');
     } catch (e) {
         req.flash("info", e);
         res.render('register.ejs');
-        res.redirect('/register');
     }
 })
 
